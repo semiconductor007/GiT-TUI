@@ -2,6 +2,7 @@
 
 pub mod contributors;
 pub mod dashboard;
+pub mod footer;
 pub mod health;
 pub mod hotspot;
 pub mod risk;

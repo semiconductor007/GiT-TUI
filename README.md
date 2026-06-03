@@ -49,6 +49,8 @@ GitInsight-RS 是一个基于 Rust 的 TUI 终端应用，用于读取和分析�
   - 页面切换
   - 行滚动
   - 翻页滚动
+  - 固定底部快捷键帮助栏
+  - 当前页面快捷键高亮
   - 退出快捷键
 - 并发分析
   - 使用 `rayon` 并行加载仓库概览、贡献者、时间线和文件热点分析结果。
@@ -91,14 +93,17 @@ src/
     hotspot.rs
     bus_factor.rs
     health.rs
+    risk.rs
     manager.rs
   ui/
     mod.rs
     dashboard.rs
+    footer.rs
     contributors.rs
     timeline.rs
     hotspot.rs
     health.rs
+    risk.rs
   models/
     mod.rs
     repository.rs
@@ -142,6 +147,7 @@ models
 
 ui
   -> 只负责 ratatui 渲染
+  -> dashboard 统一组织 Header、Tabs、Content、Footer
 
 utils
   -> 错误处理与时间工具
@@ -220,12 +226,24 @@ path/to/gitinsight-rs
 | `4` | 切换到 Hotspots 页面 |
 | `5` | 切换到 Health 页面 |
 | `6` | 切换到 Risk 页面 |
+| `Left` / `Right` | 切换到上一个 / 下一个页面 |
 | `Up` | 向上移动选择行 |
 | `Down` | 向下移动选择行 |
 | `PageUp` | 向上翻页 |
 | `PageDown` | 向下翻页 |
+| `Home` | 回到当前页面内容顶部 |
+| `End` | 跳到当前页面内容底部 |
 | `s` | 切换贡献者排序方式 |
 | `q` / `Esc` | 退出程序 |
+
+程序底部始终显示统一 Footer，例如：
+
+```text
+[1]概览  [2]贡献者  [3]时间线  [4]热点  [5]健康度  [6]风险报告
+← → 切换页面   ↑ ↓ 滚动内容   Home 顶部   End 底部   q 退出
+```
+
+当前页面对应的快捷入口会高亮显示。终端宽度较窄时，Footer 会自动使用更短的显示文本，避免换行破坏布局。
 
 ## TUI 预览
 
@@ -241,7 +259,8 @@ path/to/gitinsight-rs
 | Tags: 1                                                    |
 | Contributors: 2                                            |
 +------------------------------------------------------------+
-| Selected Row: 0                                            |
+| [1]概览  [2]贡献者  [3]时间线  [4]热点  [5]健康度  [6]风险报告 |
+| ← → 切换页面   ↑ ↓ 滚动内容   Home 顶部   End 底部   q 退出 |
 ```
 
 ## 测试说明
@@ -266,6 +285,7 @@ cargo test
 - Bus Factor 分析与风险等级
 - 健康度评分范围与评分行为
 - 应用状态与 TUI 渲染辅助函数
+- Footer 快捷键栏、高亮和窄屏显示
 - AnalysisManager 集成分析
 
 ## 错误处理

@@ -26,6 +26,26 @@ fn numeric_keys_switch_tabs() {
 }
 
 #[test]
+fn arrow_keys_switch_tabs() {
+    let mut state = AppState::default();
+
+    AppEvent::from_key_code(KeyCode::Right)
+        .expect("right arrow should switch to next tab")
+        .apply(&mut state);
+    assert_eq!(state.active_tab, Tab::Contributors);
+
+    AppEvent::from_key_code(KeyCode::Left)
+        .expect("left arrow should switch to previous tab")
+        .apply(&mut state);
+    assert_eq!(state.active_tab, Tab::Overview);
+
+    AppEvent::from_key_code(KeyCode::Left)
+        .expect("left arrow should wrap to last tab")
+        .apply(&mut state);
+    assert_eq!(state.active_tab, Tab::Risk);
+}
+
+#[test]
 fn scroll_events_update_selected_row_safely() {
     let mut state = AppState::default();
 
@@ -48,6 +68,29 @@ fn page_events_move_by_page_amount() {
     assert_eq!(state.selected_row, AppState::PAGE_SCROLL_AMOUNT);
 
     AppEvent::PageUp.apply(&mut state);
+    assert_eq!(state.selected_row, 0);
+}
+
+#[test]
+fn home_and_end_keys_jump_within_active_content() {
+    let mut state = AppState {
+        contributors: vec![
+            ContributorStats::new("Alice", "alice@example.com"),
+            ContributorStats::new("Bob", "bob@example.com"),
+            ContributorStats::new("Tom", "tom@example.com"),
+        ],
+        ..AppState::default()
+    };
+    state.switch_tab(Tab::Contributors);
+
+    AppEvent::from_key_code(KeyCode::End)
+        .expect("end should jump to bottom")
+        .apply(&mut state);
+    assert_eq!(state.selected_row, 2);
+
+    AppEvent::from_key_code(KeyCode::Home)
+        .expect("home should jump to top")
+        .apply(&mut state);
     assert_eq!(state.selected_row, 0);
 }
 

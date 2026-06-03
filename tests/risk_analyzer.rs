@@ -30,20 +30,20 @@ fn high_risk_report_explains_multiple_reasons() {
         report
             .reasons
             .iter()
-            .any(|reason| reason == "Bus Factor = 1")
+            .any(|reason| reason == "Bus Factor = 1，关键贡献者数量偏少")
     );
     assert!(report.reasons.iter().any(|reason| reason.contains("85.0%")));
     assert!(
         report
             .reasons
             .iter()
-            .any(|reason| reason.contains("Top 3 hotspot files"))
+            .any(|reason| reason.contains("Top 3 热点文件"))
     );
     assert!(
         report
             .reasons
             .iter()
-            .any(|reason| reason.contains("Health score below 60"))
+            .any(|reason| reason.contains("健康度低于 60 分"))
     );
 }
 
@@ -71,10 +71,7 @@ fn low_risk_report_has_positive_fallback_reason() {
         RiskAnalyzer::from_analysis(&[alice, bob, tom], &bus_factor, &health_score, &hotspots);
 
     assert_eq!(report.risk_level, RiskLevel::Low);
-    assert_eq!(
-        report.reasons,
-        vec!["No major repository risk signals detected"]
-    );
+    assert_eq!(report.reasons, vec!["未发现明显仓库风险信号"]);
 }
 
 fn hotspots_with_counts(change_counts: &[usize]) -> Vec<FileHotspot> {

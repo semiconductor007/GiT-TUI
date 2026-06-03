@@ -46,6 +46,22 @@ impl Tab {
             _ => None,
         }
     }
+
+    pub fn next(self) -> Self {
+        let current_index = Self::ALL
+            .iter()
+            .position(|tab| *tab == self)
+            .unwrap_or_default();
+        Self::ALL[(current_index + 1) % Self::ALL.len()]
+    }
+
+    pub fn previous(self) -> Self {
+        let current_index = Self::ALL
+            .iter()
+            .position(|tab| *tab == self)
+            .unwrap_or_default();
+        Self::ALL[(current_index + Self::ALL.len() - 1) % Self::ALL.len()]
+    }
 }
 
 pub type ActiveTab = Tab;
@@ -142,6 +158,22 @@ impl AppState {
         self.selected_row = self.selected_row.saturating_sub(Self::PAGE_SCROLL_AMOUNT);
     }
 
+    pub fn select_first_row(&mut self) {
+        self.selected_row = 0;
+    }
+
+    pub fn select_last_row(&mut self) {
+        self.selected_row = self.active_row_count().saturating_sub(1);
+    }
+
+    pub fn switch_to_next_tab(&mut self) {
+        self.switch_tab(self.active_tab.next());
+    }
+
+    pub fn switch_to_previous_tab(&mut self) {
+        self.switch_tab(self.active_tab.previous());
+    }
+
     pub fn request_quit(&mut self) {
         self.should_quit = true;
     }
@@ -166,6 +198,22 @@ impl AppState {
                     .cmp(&left.active_days)
                     .then_with(|| left.email.cmp(&right.email))
             }),
+        }
+    }
+
+    fn active_row_count(&self) -> usize {
+        match self.active_tab {
+            Tab::Overview => self.repository.as_ref().map_or(1, |_| 5),
+            Tab::Contributors => self.contributors.len(),
+            Tab::Timeline => self.timeline.len(),
+            Tab::Hotspots => self.hotspots.len(),
+            Tab::Health => {
+                usize::from(self.health_score.is_some() && self.bus_factor.is_some()) * 8
+            }
+            Tab::Risk => self
+                .risk_report
+                .as_ref()
+                .map_or(1, |report| report.reasons.len() + 2),
         }
     }
 }

@@ -63,7 +63,7 @@ GitInsight-RS 是一个基于 Rust 的 TUI Git 仓库可视化与分析工具。
                v
 +-----------------------------+
 |          ui::dashboard      |
-|       Ratatui 终端渲染       |
+| Ratatui 终端渲染与 Footer 组织 |
 +-----------------------------+
 ```
 
@@ -97,6 +97,7 @@ src/
     -> analytics 输出模型
     -> models
     -> ratatui
+    -> footer 统一快捷键帮助栏
 
   models/
     -> chrono
@@ -112,9 +113,9 @@ src/
 - `main`：程序入口，只调用 `app::run()`。
 - `app`：负责应用状态、键盘事件、TUI 生命周期和终端事件循环。
 - `git`：封装 `git2::Repository`，对外提供仓库数据访问 API。
-- `analytics`：实现各类仓库分析器，包括 Overview、Contributors、Timeline、Hotspot、Bus Factor、Health 和 AnalysisManager。
+- `analytics`：实现各类仓库分析器，包括 Overview、Contributors、Timeline、Hotspot、Bus Factor、Health、Risk 和 AnalysisManager。
 - `models`：定义领域数据结构，保证分析层和 UI 层之间传递强类型数据。
-- `ui`：负责把 `AppState` 中的数据渲染为 Ratatui 组件。
+- `ui`：负责把 `AppState` 中的数据渲染为 Ratatui 组件，并统一绘制底部快捷键 Footer。
 - `utils`：放置统一错误类型和时间转换工具。
 - `tests`：通过临时 Git 仓库验证核心功能和边界场景。
 
@@ -199,15 +200,17 @@ pub enum AppError {
 - `RepositorySummary`
   - 仓库名称、提交数、分支数、标签数、贡献者数、文件数和代码行数。
 - `ContributorStats`
-  - 贡献者姓名、邮箱、提交数、活跃天数、首次提交、最近提交、增加行数和删除行数。
+  - 贡献者姓名、邮箱、提交数、活跃天数、首次提交、最近提交、增加行数、删除行数和 Ownership 百分比。
 - `TimelineEntry`
   - 短提交 ID、作者、邮箱、提交信息和提交时间。
 - `FileHotspot`
-  - 文件路径、修改次数和最近修改时间。
+  - 文件路径、修改次数、最近修改时间和综合热度分数。
 - `BusFactorReport`
   - Bus Factor、关键贡献者列表和风险等级。
 - `HealthScore`
   - 总体分数、活跃度分数、贡献者分布分数、Bus Factor 分数和热点集中度分数。
+- `RiskReport`
+  - 综合风险等级和可解释风险原因列表。
 
 模型设计特点：
 
@@ -245,12 +248,26 @@ TUI 使用 `ratatui` 和 `crossterm` 实现。
 - Timeline
 - Hotspots
 - Health
+- Risk Report
+
+Dashboard 布局：
+
+```text
+Header
+Tabs
+Content
+Footer
+```
+
+Footer 由 `src/ui/footer.rs` 统一绘制，所有页面共用同一个底部帮助栏，不随内容滚动。Footer 显示数字切页、左右切页、上下滚动、Home/End 和退出快捷键，并高亮当前页面对应入口。
 
 键盘事件：
 
-- `1` 到 `5`：切换页面。
+- `1` 到 `6`：切换页面。
+- `Left` / `Right`：切换上一个 / 下一个页面。
 - `Up` / `Down`：上下滚动。
 - `PageUp` / `PageDown`：翻页滚动。
+- `Home` / `End`：跳到当前页面内容顶部 / 底部。
 - `s`：切换贡献者排序方式。
 - `q` / `Esc`：退出程序。
 
@@ -266,6 +283,7 @@ AppState
   -> hotspots
   -> health_score
   -> bus_factor
+  -> risk_report
   -> contributor_sort_mode
 ```
 
@@ -303,7 +321,8 @@ UI 层只负责展示数据，不直接访问 Git 仓库，也不执行分析逻
   - commit id 截断为 8 位。
 - Hotspots
   - 统计文件修改次数。
-  - 按修改次数降序排序。
+  - 结合修改次数和最近修改时间计算热度分数。
+  - 按综合热度分数降序排序。
   - 空仓库返回空列表。
   - 删除文件也计入热点变化。
 - Bus Factor
@@ -319,8 +338,13 @@ UI 层只负责展示数据，不直接访问 Git 仓库，也不执行分析逻
 - UI 与应用状态
   - Tab 切换。
   - 滚动和翻页。
+  - Home / End 跳转。
   - 退出事件。
   - 页面渲染辅助函数。
+  - Footer 快捷键栏、高亮和窄屏显示。
+- Risk
+  - 综合 Bus Factor、Ownership、热点集中度和健康度生成风险原因。
+  - 高风险和低风险场景均有测试覆盖。
 - AnalysisManager
   - 能加载核心分析结果。
   - 遵守 Timeline limit。
@@ -415,8 +439,10 @@ type Output;
 - HotspotAnalyzer。
 - BusFactorAnalyzer。
 - HealthAnalyzer。
+- RiskAnalyzer。
 - TUI 基础框架。
-- Overview、Contributors、Timeline、Hotspots、Health 页面。
+- Overview、Contributors、Timeline、Hotspots、Health、Risk 页面。
+- 统一底部快捷键 Footer。
 - Rayon 并发分析。
 - AnalysisManager 集成。
 - README 文档。

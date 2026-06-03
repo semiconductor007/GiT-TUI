@@ -8,8 +8,8 @@ fn risk_rows_include_level_and_reasons() {
     let report = RiskReport {
         risk_level: RiskLevel::High,
         reasons: vec![
-            "Bus Factor = 1".to_owned(),
-            "Single contributor owns 85.0% of commits".to_owned(),
+            "Bus Factor = 1，关键贡献者数量偏少".to_owned(),
+            "单一贡献者拥有 85.0% 的提交，知识集中度较高".to_owned(),
         ],
     };
 
@@ -19,4 +19,5 @@ fn risk_rows_include_level_and_reasons() {
     assert!(rows.iter().any(|row| row == "风险原因:"));
     assert!(rows.iter().any(|row| row.contains("Bus Factor = 1")));
     assert!(rows.iter().any(|row| row.contains("85.0%")));
+    assert!(rows.iter().any(|row| row.contains("知识集中度较高")));
 }

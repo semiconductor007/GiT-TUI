@@ -48,7 +48,7 @@ impl RiskAnalyzer {
         apply_health_risk(health_score, &mut risk_level, &mut reasons);
 
         if reasons.is_empty() {
-            reasons.push("No major repository risk signals detected".to_owned());
+            reasons.push("未发现明显仓库风险信号".to_owned());
         }
 
         RiskReport {
@@ -86,11 +86,17 @@ fn apply_bus_factor_risk(
     match bus_factor.risk_level {
         RiskLevel::High => {
             promote_risk(risk_level, RiskLevel::High);
-            reasons.push(format!("Bus Factor = {}", bus_factor.bus_factor));
+            reasons.push(format!(
+                "Bus Factor = {}，关键贡献者数量偏少",
+                bus_factor.bus_factor
+            ));
         }
         RiskLevel::Medium => {
             promote_risk(risk_level, RiskLevel::Medium);
-            reasons.push(format!("Bus Factor = {}", bus_factor.bus_factor));
+            reasons.push(format!(
+                "Bus Factor = {}，关键贡献者数量一般",
+                bus_factor.bus_factor
+            ));
         }
         RiskLevel::Low => {}
     }
@@ -109,13 +115,13 @@ fn apply_ownership_risk(
         if top_contributor.ownership_percent >= HIGH_OWNERSHIP_PERCENT {
             promote_risk(risk_level, RiskLevel::High);
             reasons.push(format!(
-                "Single contributor owns {:.1}% of commits",
+                "单一贡献者拥有 {:.1}% 的提交，知识集中度较高",
                 top_contributor.ownership_percent
             ));
         } else if top_contributor.ownership_percent >= MEDIUM_OWNERSHIP_PERCENT {
             promote_risk(risk_level, RiskLevel::Medium);
             reasons.push(format!(
-                "Leading contributor owns {:.1}% of commits",
+                "主要贡献者拥有 {:.1}% 的提交，存在一定集中度",
                 top_contributor.ownership_percent
             ));
         }
@@ -131,13 +137,13 @@ fn apply_hotspot_risk(
     if concentration >= HIGH_HOTSPOT_CONCENTRATION_PERCENT {
         promote_risk(risk_level, RiskLevel::High);
         reasons.push(format!(
-            "Top 3 hotspot files account for {:.1}% of changes",
+            "Top 3 热点文件占 {:.1}% 的修改，文件修改过于集中",
             concentration
         ));
     } else if concentration >= MEDIUM_HOTSPOT_CONCENTRATION_PERCENT {
         promote_risk(risk_level, RiskLevel::Medium);
         reasons.push(format!(
-            "Top 3 hotspot files account for {:.1}% of changes",
+            "Top 3 热点文件占 {:.1}% 的修改，文件修改集中度偏高",
             concentration
         ));
     }
@@ -151,13 +157,13 @@ fn apply_health_risk(
     if health_score.overall_score < HIGH_HEALTH_THRESHOLD {
         promote_risk(risk_level, RiskLevel::High);
         reasons.push(format!(
-            "Health score below {HIGH_HEALTH_THRESHOLD}: {}/100",
+            "健康度低于 {HIGH_HEALTH_THRESHOLD} 分：{}/100",
             health_score.overall_score
         ));
     } else if health_score.overall_score < MEDIUM_HEALTH_THRESHOLD {
         promote_risk(risk_level, RiskLevel::Medium);
         reasons.push(format!(
-            "Health score below {MEDIUM_HEALTH_THRESHOLD}: {}/100",
+            "健康度低于 {MEDIUM_HEALTH_THRESHOLD} 分：{}/100",
             health_score.overall_score
         ));
     }

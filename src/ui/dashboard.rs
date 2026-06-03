@@ -1,4 +1,4 @@
-//! Dashboard 渲染：绘制标题、标签页、内容区域和底部状态栏。
+//! Dashboard 渲染：绘制标题、标签页、内容区域和统一底部快捷键栏。
 
 use ratatui::prelude::{Constraint, Direction, Frame, Layout, Line, Modifier, Span, Style};
 use ratatui::widgets::{Block, Borders, Paragraph, Tabs};
@@ -6,6 +6,7 @@ use ratatui::widgets::{Block, Borders, Paragraph, Tabs};
 use crate::app::state::{AppState, Tab};
 use crate::models::RepositorySummary;
 use crate::ui::contributors::contributor_lines;
+use crate::ui::footer::render_footer;
 use crate::ui::health::health_lines;
 use crate::ui::hotspot::{DEFAULT_HOTSPOT_TOP_N, hotspot_lines};
 use crate::ui::risk::risk_lines;
@@ -35,14 +36,14 @@ pub fn draw_dashboard(frame: &mut Frame<'_>, state: &AppState) {
             Constraint::Length(3),
             Constraint::Length(3),
             Constraint::Min(3),
-            Constraint::Length(1),
+            Constraint::Length(2),
         ])
         .split(frame.area());
 
     render_title(frame, state, root[0]);
     render_tabs(frame, state, root[1]);
     render_content_shell(frame, state, root[2]);
-    render_status(frame, state, root[3]);
+    render_footer(frame, root[3], state);
 }
 
 fn render_title(frame: &mut Frame<'_>, state: &AppState, area: ratatui::layout::Rect) {
@@ -141,10 +142,4 @@ fn render_risk(frame: &mut Frame<'_>, state: &AppState, area: ratatui::layout::R
         .block(Block::default().title("风险报告").borders(Borders::ALL));
 
     frame.render_widget(content, area);
-}
-
-fn render_status(frame: &mut Frame<'_>, state: &AppState, area: ratatui::layout::Rect) {
-    let status = Paragraph::new(format!("当前行: {}", state.selected_row));
-
-    frame.render_widget(status, area);
 }
