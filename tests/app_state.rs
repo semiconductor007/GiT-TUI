@@ -1,0 +1,86 @@
+use crossterm::event::KeyCode;
+use gitinsight_rs::analytics::{BusFactorReport, HealthScore};
+use gitinsight_rs::app::event::AppEvent;
+use gitinsight_rs::app::state::{AppState, ContributorSortMode, Tab};
+use gitinsight_rs::models::{ContributorStats, RepositorySummary};
+
+#[test]
+fn numeric_keys_switch_tabs() {
+    let mut state = AppState::default();
+
+    AppEvent::from_key_code(KeyCode::Char('3'))
+        .expect("3 should map to timeline tab")
+        .apply(&mut state);
+
+    assert_eq!(state.active_tab, Tab::Timeline);
+    assert_eq!(state.selected_row, 0);
+}
+
+#[test]
+fn scroll_events_update_selected_row_safely() {
+    let mut state = AppState::default();
+
+    AppEvent::ScrollUp.apply(&mut state);
+    assert_eq!(state.selected_row, 0);
+
+    AppEvent::ScrollDown.apply(&mut state);
+    AppEvent::ScrollDown.apply(&mut state);
+    assert_eq!(state.selected_row, 2);
+
+    AppEvent::ScrollUp.apply(&mut state);
+    assert_eq!(state.selected_row, 1);
+}
+
+#[test]
+fn page_events_move_by_page_amount() {
+    let mut state = AppState::default();
+
+    AppEvent::PageDown.apply(&mut state);
+    assert_eq!(state.selected_row, AppState::PAGE_SCROLL_AMOUNT);
+
+    AppEvent::PageUp.apply(&mut state);
+    assert_eq!(state.selected_row, 0);
+}
+
+#[test]
+fn quit_key_sets_quit_flag() {
+    let mut state = AppState::default();
+
+    AppEvent::from_key_code(KeyCode::Char('q'))
+        .expect("q should map to quit")
+        .apply(&mut state);
+
+    assert!(state.should_quit);
+}
+
+#[test]
+fn contributor_sort_toggle_reorders_contributors() {
+    let summary = RepositorySummary::new("demo", "D:/repos/demo");
+    let mut alice = ContributorStats::new("Alice", "alice@example.com");
+    alice.commit_count = 5;
+    alice.active_days = 1;
+    let mut bob = ContributorStats::new("Bob", "bob@example.com");
+    bob.commit_count = 2;
+    bob.active_days = 4;
+
+    let mut state = AppState::with_repository(
+        summary,
+        vec![bob, alice],
+        Vec::new(),
+        Vec::new(),
+        HealthScore::default(),
+        BusFactorReport::default(),
+    );
+
+    assert_eq!(
+        state.contributor_sort_mode,
+        ContributorSortMode::CommitCount
+    );
+    assert_eq!(state.contributors[0].name, "Alice");
+
+    AppEvent::ToggleContributorSort.apply(&mut state);
+
+    assert_eq!(state.contributor_sort_mode, ContributorSortMode::ActiveDays);
+    assert_eq!(state.contributors[0].name, "Bob");
+    assert_eq!(state.selected_row, 0);
+}
