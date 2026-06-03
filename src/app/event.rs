@@ -1,3 +1,5 @@
+//! 事件处理：把键盘输入转换为应用状态变化。
+
 use crossterm::event::KeyCode;
 
 use crate::app::state::{AppState, Tab};

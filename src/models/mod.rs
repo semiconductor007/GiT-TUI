@@ -1,3 +1,5 @@
+//! 模型模块入口：导出仓库、提交、贡献者和时间线等领域数据结构。
+
 pub mod commit;
 pub mod contributor;
 pub mod repository;

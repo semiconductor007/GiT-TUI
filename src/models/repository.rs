@@ -1,3 +1,5 @@
+//! 仓库模型：保存 Repository Overview 页面需要的统计摘要。
+
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};

@@ -1,3 +1,5 @@
+//! 贡献者分析：按邮箱聚合提交数量、活跃天数和 Ownership 百分比。
+
 use std::collections::{HashMap, HashSet};
 
 use chrono::NaiveDate;
@@ -75,6 +77,13 @@ impl Analyzer for ContributorAnalyzer {
             .into_values()
             .map(ContributorAccumulator::into_stats)
             .collect::<Vec<_>>();
+        let total_commits = stats
+            .iter()
+            .map(|contributor| contributor.commit_count)
+            .sum::<usize>();
+        for contributor in &mut stats {
+            contributor.set_ownership(total_commits);
+        }
         stats.sort_by(|left, right| {
             right
                 .commit_count

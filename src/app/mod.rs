@@ -1,3 +1,5 @@
+//! 应用运行层：负责打开仓库、加载分析结果、启动终端 UI 和事件循环。
+
 pub mod event;
 pub mod state;
 
@@ -33,6 +35,7 @@ pub fn run() -> Result<()> {
         snapshot.hotspots,
         snapshot.health_score,
         snapshot.bus_factor,
+        snapshot.risk_report,
     );
 
     run_tui(state)

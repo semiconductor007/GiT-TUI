@@ -1,3 +1,4 @@
+# 项目配置：定义 GitInsight-RS 的包信息、依赖和测试依赖。
 [package]
 name = "gitinsight-rs"
 version = "0.1.0"

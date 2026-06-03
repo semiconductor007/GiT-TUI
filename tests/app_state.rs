@@ -1,5 +1,7 @@
+//! 状态测试：验证 Tab 切换、滚动、退出和贡献者排序状态变化。
+
 use crossterm::event::KeyCode;
-use gitinsight_rs::analytics::{BusFactorReport, HealthScore};
+use gitinsight_rs::analytics::{BusFactorReport, HealthScore, RiskReport};
 use gitinsight_rs::app::event::AppEvent;
 use gitinsight_rs::app::state::{AppState, ContributorSortMode, Tab};
 use gitinsight_rs::models::{ContributorStats, RepositorySummary};
@@ -13,6 +15,13 @@ fn numeric_keys_switch_tabs() {
         .apply(&mut state);
 
     assert_eq!(state.active_tab, Tab::Timeline);
+    assert_eq!(state.selected_row, 0);
+
+    AppEvent::from_key_code(KeyCode::Char('6'))
+        .expect("6 should map to risk tab")
+        .apply(&mut state);
+
+    assert_eq!(state.active_tab, Tab::Risk);
     assert_eq!(state.selected_row, 0);
 }
 
@@ -70,6 +79,7 @@ fn contributor_sort_toggle_reorders_contributors() {
         Vec::new(),
         HealthScore::default(),
         BusFactorReport::default(),
+        RiskReport::default(),
     );
 
     assert_eq!(

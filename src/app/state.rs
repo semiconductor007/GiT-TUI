@@ -1,4 +1,6 @@
-use crate::analytics::{BusFactorReport, FileHotspot, HealthScore};
+//! 应用状态：保存当前页面、滚动位置、分析数据和页面排序方式。
+
+use crate::analytics::{BusFactorReport, FileHotspot, HealthScore, RiskReport};
 use crate::models::{ContributorStats, RepositorySummary, TimelineEntry};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -9,24 +11,27 @@ pub enum Tab {
     Timeline,
     Hotspots,
     Health,
+    Risk,
 }
 
 impl Tab {
-    pub const ALL: [Self; 5] = [
+    pub const ALL: [Self; 6] = [
         Self::Overview,
         Self::Contributors,
         Self::Timeline,
         Self::Hotspots,
         Self::Health,
+        Self::Risk,
     ];
 
     pub fn title(self) -> &'static str {
         match self {
-            Self::Overview => "Overview",
-            Self::Contributors => "Contributors",
-            Self::Timeline => "Timeline",
-            Self::Hotspots => "Hotspots",
-            Self::Health => "Health",
+            Self::Overview => "概览",
+            Self::Contributors => "贡献者",
+            Self::Timeline => "时间线",
+            Self::Hotspots => "文件热点",
+            Self::Health => "健康度",
+            Self::Risk => "风险报告",
         }
     }
 
@@ -37,6 +42,7 @@ impl Tab {
             '3' => Some(Self::Timeline),
             '4' => Some(Self::Hotspots),
             '5' => Some(Self::Health),
+            '6' => Some(Self::Risk),
             _ => None,
         }
     }
@@ -61,8 +67,8 @@ impl ContributorSortMode {
 
     pub fn title(self) -> &'static str {
         match self {
-            Self::CommitCount => "Commit Count",
-            Self::ActiveDays => "Active Days",
+            Self::CommitCount => "提交数量",
+            Self::ActiveDays => "活跃天数",
         }
     }
 }
@@ -78,6 +84,7 @@ pub struct AppState {
     pub hotspots: Vec<FileHotspot>,
     pub health_score: Option<HealthScore>,
     pub bus_factor: Option<BusFactorReport>,
+    pub risk_report: Option<RiskReport>,
     pub contributor_sort_mode: ContributorSortMode,
 }
 
@@ -91,6 +98,7 @@ impl AppState {
         hotspots: Vec<FileHotspot>,
         health_score: HealthScore,
         bus_factor: BusFactorReport,
+        risk_report: RiskReport,
     ) -> Self {
         let mut state = Self {
             repository: Some(repository),
@@ -99,6 +107,7 @@ impl AppState {
             hotspots,
             health_score: Some(health_score),
             bus_factor: Some(bus_factor),
+            risk_report: Some(risk_report),
             ..Self::default()
         };
         state.sort_contributors();

@@ -1,3 +1,5 @@
+//! 文件热点页面：展示修改次数和热度分数最高的文件。
+
 use ratatui::prelude::Line;
 
 use crate::analytics::FileHotspot;
@@ -9,7 +11,10 @@ pub fn hotspot_rows(hotspots: &[FileHotspot], top_n: usize) -> Vec<String> {
 }
 
 pub fn hotspot_row(hotspot: &FileHotspot) -> String {
-    format!("{:<48} {:>6} changes", hotspot.path, hotspot.change_count)
+    format!(
+        "{:<42} {:>5} 次修改  热度 {:>5.2}",
+        hotspot.path, hotspot.change_count, hotspot.score
+    )
 }
 
 pub fn hotspot_lines(
@@ -26,7 +31,7 @@ pub fn hotspot_lines(
 
 fn visible_rows(rows: &[String], selected_row: usize, height: usize) -> Vec<String> {
     if rows.is_empty() {
-        return vec!["No hotspots found".to_owned()];
+        return vec!["暂无文件热点数据".to_owned()];
     }
 
     let start = selected_row.min(rows.len().saturating_sub(1));

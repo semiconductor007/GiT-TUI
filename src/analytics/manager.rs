@@ -1,9 +1,12 @@
+//! 分析调度器：并行加载核心分析数据并组装 AnalysisSnapshot。
+
 use std::path::Path;
 
 use rayon::join;
 
 use crate::analytics::{
-    BusFactorReport, DEFAULT_TIMELINE_LIMIT, FileHotspot, HealthScore, OverviewAnalyzer,
+    BusFactorAnalyzer, BusFactorReport, DEFAULT_TIMELINE_LIMIT, FileHotspot, HealthAnalyzer,
+    HealthScore, OverviewAnalyzer, RiskAnalyzer, RiskReport,
 };
 use crate::git::{Analyzer, GitRepository};
 use crate::models::{ContributorStats, RepositorySummary, TimelineEntry};
@@ -17,6 +20,7 @@ pub struct AnalysisSnapshot {
     pub hotspots: Vec<FileHotspot>,
     pub health_score: HealthScore,
     pub bus_factor: BusFactorReport,
+    pub risk_report: RiskReport,
 }
 
 #[derive(Debug, Clone)]
@@ -36,24 +40,37 @@ impl AnalysisManager {
     }
 
     pub fn analyze(&self, repo: &GitRepository) -> Result<AnalysisSnapshot> {
-        let summary = OverviewAnalyzer.analyze(repo)?;
         let repo_path = repo.repository_path();
 
-        let (contributors_result, (timeline_result, hotspots_result)) = join(
-            || load_contributors(&repo_path),
+        // 使用 Rayon 并行加载互不依赖的数据集；每个任务重新打开仓库，避免跨线程共享 git2::Repository。
+        let (summary_result, (contributors_result, (timeline_result, hotspots_result))) = join(
+            || load_summary(&repo_path),
             || {
                 join(
-                    || load_timeline(&repo_path, self.recent_commit_limit),
-                    || load_hotspots(&repo_path),
+                    || load_contributors(&repo_path),
+                    || {
+                        join(
+                            || load_timeline(&repo_path, self.recent_commit_limit),
+                            || load_hotspots(&repo_path),
+                        )
+                    },
                 )
             },
         );
 
+        let summary = summary_result?;
         let contributors = contributors_result?;
         let timeline = timeline_result?;
         let hotspots = hotspots_result?;
-        let health_score = repo.health_score()?;
-        let bus_factor = repo.bus_factor()?;
+        let bus_factor = BusFactorAnalyzer::from_contributors(&contributors);
+        let health_score = HealthAnalyzer::from_analysis(
+            summary.total_commits,
+            &contributors,
+            &bus_factor,
+            &hotspots,
+        );
+        let risk_report =
+            RiskAnalyzer::from_analysis(&contributors, &bus_factor, &health_score, &hotspots);
 
         Ok(AnalysisSnapshot {
             summary,
@@ -62,6 +79,7 @@ impl AnalysisManager {
             hotspots,
             health_score,
             bus_factor,
+            risk_report,
         })
     }
 }
@@ -70,6 +88,10 @@ impl Default for AnalysisManager {
     fn default() -> Self {
         Self::new(DEFAULT_TIMELINE_LIMIT)
     }
+}
+
+fn load_summary(repo_path: &Path) -> Result<RepositorySummary> {
+    OverviewAnalyzer.analyze(&GitRepository::open(repo_path)?)
 }
 
 fn load_contributors(repo_path: &Path) -> Result<Vec<ContributorStats>> {

@@ -1,3 +1,5 @@
+//! 时间线模型：保存 TUI 时间线页面展示的单条提交记录。
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 

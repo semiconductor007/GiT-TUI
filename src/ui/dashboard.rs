@@ -1,3 +1,5 @@
+//! Dashboard 渲染：绘制标题、标签页、内容区域和底部状态栏。
+
 use ratatui::prelude::{Constraint, Direction, Frame, Layout, Line, Modifier, Span, Style};
 use ratatui::widgets::{Block, Borders, Paragraph, Tabs};
 
@@ -6,15 +8,16 @@ use crate::models::RepositorySummary;
 use crate::ui::contributors::contributor_lines;
 use crate::ui::health::health_lines;
 use crate::ui::hotspot::{DEFAULT_HOTSPOT_TOP_N, hotspot_lines};
+use crate::ui::risk::risk_lines;
 use crate::ui::timeline::timeline_lines;
 
 pub fn overview_rows(summary: &RepositorySummary) -> Vec<(&'static str, String)> {
     vec![
-        ("Repository Name", summary.name.clone()),
-        ("Commits", summary.total_commits.to_string()),
-        ("Branches", summary.total_branches.to_string()),
-        ("Tags", summary.total_tags.to_string()),
-        ("Contributors", summary.total_contributors.to_string()),
+        ("仓库名称", summary.name.clone()),
+        ("提交总数", summary.total_commits.to_string()),
+        ("本地分支", summary.total_branches.to_string()),
+        ("标签数量", summary.total_tags.to_string()),
+        ("贡献者数", summary.total_contributors.to_string()),
     ]
 }
 
@@ -77,6 +80,7 @@ fn render_content_shell(frame: &mut Frame<'_>, state: &AppState, area: ratatui::
         Tab::Timeline => render_timeline(frame, state, area),
         Tab::Hotspots => render_hotspots(frame, state, area),
         Tab::Health => render_health(frame, state, area),
+        Tab::Risk => render_risk(frame, state, area),
     }
 }
 
@@ -85,18 +89,15 @@ fn render_overview(frame: &mut Frame<'_>, state: &AppState, area: ratatui::layou
         .repository
         .as_ref()
         .map(overview_lines)
-        .unwrap_or_else(|| vec![Line::from("Repository summary is not loaded")]);
+        .unwrap_or_else(|| vec![Line::from("仓库概览尚未加载")]);
     let content =
-        Paragraph::new(lines).block(Block::default().title("Overview").borders(Borders::ALL));
+        Paragraph::new(lines).block(Block::default().title("仓库概览").borders(Borders::ALL));
 
     frame.render_widget(content, area);
 }
 
 fn render_contributors(frame: &mut Frame<'_>, state: &AppState, area: ratatui::layout::Rect) {
-    let title = format!(
-        "Contributors | sorted by {}",
-        state.contributor_sort_mode.title()
-    );
+    let title = format!("贡献者 | 按{}排序", state.contributor_sort_mode.title());
     let content = Paragraph::new(contributor_lines(&state.contributors, state.selected_row))
         .block(Block::default().title(title).borders(Borders::ALL));
 
@@ -104,14 +105,17 @@ fn render_contributors(frame: &mut Frame<'_>, state: &AppState, area: ratatui::l
 }
 
 fn render_timeline(frame: &mut Frame<'_>, state: &AppState, area: ratatui::layout::Rect) {
-    let content = Paragraph::new(timeline_lines(&state.timeline, state.selected_row))
-        .block(Block::default().title("Timeline").borders(Borders::ALL));
+    let content = Paragraph::new(timeline_lines(&state.timeline, state.selected_row)).block(
+        Block::default()
+            .title("提交时间线 | 最左列为提交ID，即Git哈希前8位")
+            .borders(Borders::ALL),
+    );
 
     frame.render_widget(content, area);
 }
 
 fn render_hotspots(frame: &mut Frame<'_>, state: &AppState, area: ratatui::layout::Rect) {
-    let title = format!("Hotspots | Top {DEFAULT_HOTSPOT_TOP_N}");
+    let title = format!("文件热点 | 前 {DEFAULT_HOTSPOT_TOP_N} 项");
     let content = Paragraph::new(hotspot_lines(
         &state.hotspots,
         state.selected_row,
@@ -127,13 +131,20 @@ fn render_health(frame: &mut Frame<'_>, state: &AppState, area: ratatui::layout:
         state.health_score.as_ref(),
         state.bus_factor.as_ref(),
     ))
-    .block(Block::default().title("Health").borders(Borders::ALL));
+    .block(Block::default().title("仓库健康度").borders(Borders::ALL));
+
+    frame.render_widget(content, area);
+}
+
+fn render_risk(frame: &mut Frame<'_>, state: &AppState, area: ratatui::layout::Rect) {
+    let content = Paragraph::new(risk_lines(state.risk_report.as_ref()))
+        .block(Block::default().title("风险报告").borders(Borders::ALL));
 
     frame.render_widget(content, area);
 }
 
 fn render_status(frame: &mut Frame<'_>, state: &AppState, area: ratatui::layout::Rect) {
-    let status = Paragraph::new(format!("Selected Row: {}", state.selected_row));
+    let status = Paragraph::new(format!("当前行: {}", state.selected_row));
 
     frame.render_widget(status, area);
 }

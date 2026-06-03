@@ -1,3 +1,5 @@
+//! 概览页面测试：验证仓库摘要字段能正确转换为展示行。
+
 use gitinsight_rs::models::RepositorySummary;
 use gitinsight_rs::ui::dashboard::overview_rows;
 
@@ -16,11 +18,11 @@ fn overview_rows_match_repository_summary() {
     assert_eq!(
         rows,
         vec![
-            ("Repository Name", "demo".to_owned()),
-            ("Commits", "12".to_owned()),
-            ("Branches", "3".to_owned()),
-            ("Tags", "2".to_owned()),
-            ("Contributors", "4".to_owned()),
+            ("仓库名称", "demo".to_owned()),
+            ("提交总数", "12".to_owned()),
+            ("本地分支", "3".to_owned()),
+            ("标签数量", "2".to_owned()),
+            ("贡献者数", "4".to_owned()),
         ]
     );
 }

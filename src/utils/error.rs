@@ -1,3 +1,5 @@
+//! 错误处理：定义项目统一的 Result 类型和 AppError 枚举。
+
 use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, AppError>;

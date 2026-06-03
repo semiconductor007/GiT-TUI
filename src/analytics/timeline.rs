@@ -1,3 +1,5 @@
+//! 时间线分析：提取最近提交记录、短提交 ID、作者、时间和提交信息。
+
 use crate::git::repository::push_head_if_present;
 use crate::git::{Analyzer, GitRepository};
 use crate::models::TimelineEntry;
@@ -5,7 +7,7 @@ use crate::utils::Result;
 use crate::utils::time::unix_seconds_to_utc;
 
 pub const DEFAULT_TIMELINE_LIMIT: usize = 50;
-const EMPTY_MESSAGE: &str = "<no message>";
+const EMPTY_MESSAGE: &str = "<无提交信息>";
 const SHORT_COMMIT_ID_LEN: usize = 8;
 
 #[derive(Debug, Clone)]

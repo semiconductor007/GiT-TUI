@@ -1,3 +1,5 @@
+//! 仓库概览分析：生成提交数、分支数、标签数和贡献者数等摘要。
+
 use crate::git::{Analyzer, GitRepository};
 use crate::models::RepositorySummary;
 use crate::utils::Result;

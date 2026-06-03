@@ -1,3 +1,5 @@
+//! Bus Factor 测试：验证关键贡献者数量和风险等级判断。
+
 use std::error::Error;
 use std::path::Path;
 
@@ -21,6 +23,19 @@ fn single_dominant_author() -> Result<(), Box<dyn Error>> {
 
     assert_eq!(report.bus_factor, 1);
     assert_eq!(report.top_contributors, vec!["Tom"]);
+    assert_eq!(report.risk_level, RiskLevel::High);
+
+    Ok(())
+}
+
+#[test]
+fn empty_repository_has_zero_bus_factor() -> Result<(), Box<dyn Error>> {
+    let (_temp_dir, repo_path) = init_temp_repository()?;
+
+    let report = GitRepository::open(&repo_path)?.bus_factor()?;
+
+    assert_eq!(report.bus_factor, 0);
+    assert!(report.top_contributors.is_empty());
     assert_eq!(report.risk_level, RiskLevel::High);
 
     Ok(())

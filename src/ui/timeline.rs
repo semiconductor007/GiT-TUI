@@ -1,3 +1,5 @@
+//! 时间线页面：把最近提交记录格式化为终端列表。
+
 use ratatui::prelude::Line;
 
 use crate::models::TimelineEntry;
@@ -27,7 +29,7 @@ pub fn timeline_lines(commits: &[TimelineEntry], selected_row: usize) -> Vec<Lin
 
 fn visible_rows(rows: &[String], selected_row: usize, height: usize) -> Vec<String> {
     if rows.is_empty() {
-        return vec!["No commits found".to_owned()];
+        return vec!["暂无提交记录".to_owned()];
     }
 
     let start = selected_row.min(rows.len().saturating_sub(1));

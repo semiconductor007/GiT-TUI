@@ -1,3 +1,5 @@
+//! Bus Factor 分析：识别关键贡献者集中度和维护风险。
+
 use serde::{Deserialize, Serialize};
 
 use crate::git::{Analyzer, GitRepository};
@@ -24,6 +26,12 @@ pub struct BusFactorReport {
 #[derive(Debug, Clone, Default)]
 pub struct BusFactorAnalyzer;
 
+impl BusFactorAnalyzer {
+    pub fn from_contributors(contributors: &[ContributorStats]) -> BusFactorReport {
+        calculate_bus_factor(contributors)
+    }
+}
+
 impl Analyzer for BusFactorAnalyzer {
     type Output = BusFactorReport;
 
@@ -31,7 +39,7 @@ impl Analyzer for BusFactorAnalyzer {
         super::validate_repository(repo)?;
 
         let contributors = repo.contributors()?;
-        Ok(calculate_bus_factor(&contributors))
+        Ok(Self::from_contributors(&contributors))
     }
 }
 

@@ -1,3 +1,5 @@
+//! 时间工具：负责 UTC 时间转换和终端显示格式化。
+
 use chrono::{DateTime, Local, Utc};
 
 use crate::utils::{AppError, Result};

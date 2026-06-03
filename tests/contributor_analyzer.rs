@@ -1,3 +1,5 @@
+//! 贡献者分析测试：验证提交统计、活跃天数、Ownership 和排序。
+
 use std::error::Error;
 use std::path::Path;
 
@@ -50,8 +52,55 @@ fn contributor_counting() -> Result<(), Box<dyn Error>> {
     assert_eq!(tom.commit_count, 2);
     assert_eq!(alice.name, "Alice");
     assert_eq!(alice.commit_count, 1);
+    assert!((tom.ownership_percent - 66.666).abs() < 0.01);
+    assert!((alice.ownership_percent - 33.333).abs() < 0.01);
     assert_eq!(tom.lines_added, 0);
     assert_eq!(tom.lines_deleted, 0);
+
+    Ok(())
+}
+
+#[test]
+fn empty_repository_has_no_contributors() -> Result<(), Box<dyn Error>> {
+    let (_temp_dir, repo_path) = init_temp_repository()?;
+
+    let contributors = analyze_contributors(&repo_path)?;
+
+    assert!(contributors.is_empty());
+
+    Ok(())
+}
+
+#[test]
+fn same_email_is_grouped_as_one_contributor() -> Result<(), Box<dyn Error>> {
+    let (_temp_dir, repo_path) = init_temp_repository()?;
+    let repo = Repository::open(&repo_path)?;
+
+    commit_file(
+        &repo,
+        &repo_path,
+        "a.txt",
+        "a",
+        "Tom",
+        "tom@example.com",
+        DAY_ONE,
+    )?;
+    commit_file(
+        &repo,
+        &repo_path,
+        "b.txt",
+        "b",
+        "Thomas",
+        "tom@example.com",
+        DAY_ONE + 60,
+    )?;
+
+    let contributors = analyze_contributors(&repo_path)?;
+
+    assert_eq!(contributors.len(), 1);
+    assert_eq!(contributors[0].email, "tom@example.com");
+    assert_eq!(contributors[0].commit_count, 2);
+    assert!((contributors[0].ownership_percent - 100.0).abs() < f64::EPSILON);
 
     Ok(())
 }
@@ -94,6 +143,61 @@ fn active_days_counts_unique_dates() -> Result<(), Box<dyn Error>> {
 
     assert_eq!(tom.commit_count, 3);
     assert_eq!(tom.active_days, 2);
+
+    Ok(())
+}
+
+#[test]
+fn ownership_percentages_sum_to_one_hundred() -> Result<(), Box<dyn Error>> {
+    let (_temp_dir, repo_path) = init_temp_repository()?;
+    let repo = Repository::open(&repo_path)?;
+
+    commit_file(
+        &repo,
+        &repo_path,
+        "a.txt",
+        "a",
+        "Tom",
+        "tom@example.com",
+        DAY_ONE,
+    )?;
+    commit_file(
+        &repo,
+        &repo_path,
+        "b.txt",
+        "b",
+        "Alice",
+        "alice@example.com",
+        DAY_ONE + 60,
+    )?;
+    commit_file(
+        &repo,
+        &repo_path,
+        "c.txt",
+        "c",
+        "Bob",
+        "bob@example.com",
+        DAY_ONE + 120,
+    )?;
+    commit_file(
+        &repo,
+        &repo_path,
+        "d.txt",
+        "d",
+        "Bob",
+        "bob@example.com",
+        DAY_ONE + 180,
+    )?;
+
+    let contributors = analyze_contributors(&repo_path)?;
+    let total_ownership = contributors
+        .iter()
+        .map(|contributor| contributor.ownership_percent)
+        .sum::<f64>();
+    let bob = contributor_by_email(&contributors, "bob@example.com")?;
+
+    assert!((total_ownership - 100.0).abs() < 0.01);
+    assert!((bob.ownership_percent - 50.0).abs() < f64::EPSILON);
 
     Ok(())
 }

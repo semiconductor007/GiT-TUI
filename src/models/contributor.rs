@@ -1,3 +1,5 @@
+//! 贡献者模型：记录作者提交数、活跃天数、时间范围和 Ownership。
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -11,6 +13,7 @@ pub struct ContributorStats {
     pub last_commit: Option<DateTime<Utc>>,
     pub lines_added: usize,
     pub lines_deleted: usize,
+    pub ownership_percent: f64,
 }
 
 impl ContributorStats {
@@ -36,6 +39,14 @@ impl ContributorStats {
 
     pub fn changed_lines(&self) -> usize {
         self.lines_added + self.lines_deleted
+    }
+
+    pub fn set_ownership(&mut self, total_commits: usize) {
+        self.ownership_percent = if total_commits == 0 {
+            0.0
+        } else {
+            self.commit_count as f64 / total_commits as f64 * 100.0
+        };
     }
 
     fn update_commit_range(&mut self, timestamp: DateTime<Utc>) {

@@ -1,3 +1,5 @@
+//! 集成测试：验证 AnalysisManager 能正确聚合并发分析结果。
+
 use std::error::Error;
 use std::path::Path;
 
@@ -50,6 +52,66 @@ fn analysis_manager_loads_core_datasets() -> Result<(), Box<dyn Error>> {
     assert_eq!(snapshot.hotspots[0].path, "src/main.rs");
     assert!(snapshot.health_score.overall_score <= 100);
     assert!(snapshot.bus_factor.bus_factor >= 1);
+
+    Ok(())
+}
+
+#[test]
+fn analysis_manager_respects_timeline_limit() -> Result<(), Box<dyn Error>> {
+    let (_temp_dir, repo_path) = init_temp_repository()?;
+    let repo = Repository::open(&repo_path)?;
+
+    for index in 0..5 {
+        commit_file(
+            &repo,
+            &repo_path,
+            &format!("file-{index}.txt"),
+            &format!("content {index}\n"),
+            "Alice",
+            "alice@example.com",
+            BASE_TIME + index as i64 * 60,
+        )?;
+    }
+
+    let repository = GitRepository::open(&repo_path)?;
+    let snapshot = AnalysisManager::new(2).analyze(&repository)?;
+
+    assert_eq!(snapshot.summary.total_commits, 5);
+    assert_eq!(snapshot.timeline.len(), 2);
+
+    Ok(())
+}
+
+#[test]
+fn analysis_manager_matches_direct_repository_analysis() -> Result<(), Box<dyn Error>> {
+    let (_temp_dir, repo_path) = init_temp_repository()?;
+    let repo = Repository::open(&repo_path)?;
+
+    for index in 0..6 {
+        let (author_name, author_email) = if index % 2 == 0 {
+            ("Alice", "alice@example.com")
+        } else {
+            ("Bob", "bob@example.com")
+        };
+        commit_file(
+            &repo,
+            &repo_path,
+            &format!("src/file-{}.rs", index % 3),
+            &format!("pub const VALUE: usize = {index};\n"),
+            author_name,
+            author_email,
+            BASE_TIME + index as i64 * 60,
+        )?;
+    }
+
+    let repository = GitRepository::open(&repo_path)?;
+    let snapshot = AnalysisManager::default().analyze(&repository)?;
+
+    assert_eq!(snapshot.summary, repository.summary()?);
+    assert_eq!(snapshot.contributors, repository.contributors()?);
+    assert_eq!(snapshot.bus_factor, repository.bus_factor()?);
+    assert_eq!(snapshot.health_score, repository.health_score()?);
+    assert_eq!(snapshot.risk_report, repository.risk_report()?);
 
     Ok(())
 }

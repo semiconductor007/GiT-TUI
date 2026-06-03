@@ -1,3 +1,5 @@
+//! 时间线分析测试：验证最近提交排序、limit、空信息和短提交 ID。
+
 use std::error::Error;
 use std::path::Path;
 
@@ -18,6 +20,31 @@ fn recent_commit_count() -> Result<(), Box<dyn Error>> {
     let entries = recent_commits(&repo_path, 50)?;
 
     assert_eq!(entries.len(), 4);
+
+    Ok(())
+}
+
+#[test]
+fn empty_repository_returns_no_timeline_entries() -> Result<(), Box<dyn Error>> {
+    let (_temp_dir, repo_path) = init_temp_repository()?;
+
+    let entries = recent_commits(&repo_path, 50)?;
+
+    assert!(entries.is_empty());
+
+    Ok(())
+}
+
+#[test]
+fn zero_limit_returns_no_timeline_entries() -> Result<(), Box<dyn Error>> {
+    let (_temp_dir, repo_path) = init_temp_repository()?;
+    let repo = Repository::open(&repo_path)?;
+
+    create_commits(&repo, &repo_path, 3)?;
+
+    let entries = recent_commits(&repo_path, 0)?;
+
+    assert!(entries.is_empty());
 
     Ok(())
 }
@@ -71,7 +98,7 @@ fn empty_message_uses_placeholder() -> Result<(), Box<dyn Error>> {
 
     let entries = recent_commits(&repo_path, 50)?;
 
-    assert_eq!(entries[0].message, "<no message>");
+    assert_eq!(entries[0].message, "<无提交信息>");
 
     Ok(())
 }

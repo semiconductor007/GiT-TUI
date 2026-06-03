@@ -1,3 +1,5 @@
+//! 提交模型：描述单次提交及其文件变更和代码行数统计。
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 

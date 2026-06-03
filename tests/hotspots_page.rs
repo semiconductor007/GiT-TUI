@@ -1,3 +1,5 @@
+//! 文件热点页面测试：验证热点行文本和 Top N 展示。
+
 use gitinsight_rs::analytics::FileHotspot;
 use gitinsight_rs::ui::hotspot::{hotspot_row, hotspot_rows};
 
@@ -9,7 +11,8 @@ fn hotspot_row_contains_path_and_change_count() {
     let row = hotspot_row(&hotspot);
 
     assert!(row.contains("src/main.rs"));
-    assert!(row.contains("12 changes"));
+    assert!(row.contains("12 次修改"));
+    assert!(row.contains("热度"));
 }
 
 #[test]

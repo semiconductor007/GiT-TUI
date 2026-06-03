@@ -1,3 +1,5 @@
+//! 模型冒烟测试：验证核心数据模型的基础构造和统计方法。
+
 use chrono::DateTime;
 use gitinsight_rs::models::{
     ChangeKind, CommitInfo, ContributorStats, FileChange, RepositorySummary,
@@ -48,6 +50,8 @@ fn contributor_records_commit_totals() {
     assert_eq!(contributor.lines_added, 12);
     assert_eq!(contributor.lines_deleted, 4);
     assert_eq!(contributor.changed_lines(), 16);
+    contributor.set_ownership(8);
+    assert_eq!(contributor.ownership_percent, 25.0);
     assert_eq!(contributor.first_commit, Some(first_commit));
     assert_eq!(contributor.last_commit, Some(second_commit));
 }

@@ -1,3 +1,5 @@
+//! 仓库概览测试：验证 GitRepository 打开仓库和生成 summary。
+
 use std::error::Error;
 use std::path::Path;
 
@@ -12,6 +14,17 @@ fn repository_open() -> Result<(), Box<dyn Error>> {
     let repository = GitRepository::open(&repo_path)?;
 
     assert!(!repository.repository_name()?.trim().is_empty());
+
+    Ok(())
+}
+
+#[test]
+fn repository_open_rejects_non_git_directory() -> Result<(), Box<dyn Error>> {
+    let temp_dir = tempfile::tempdir()?;
+
+    let result = GitRepository::open(temp_dir.path());
+
+    assert!(result.is_err());
 
     Ok(())
 }

@@ -1,11 +1,16 @@
+//! Git 仓库访问层：封装 git2::Repository 并提供统计与分析入口。
+
 use std::path::{Path, PathBuf};
 
 use git2::{BranchType, ErrorCode, Repository};
 
 use crate::analytics::FileHotspot;
 use crate::analytics::HealthScore;
+use crate::analytics::RiskReport;
 use crate::analytics::{BusFactorAnalyzer, BusFactorReport};
-use crate::analytics::{ContributorAnalyzer, HealthAnalyzer, HotspotAnalyzer, TimelineAnalyzer};
+use crate::analytics::{
+    ContributorAnalyzer, HealthAnalyzer, HotspotAnalyzer, RiskAnalyzer, TimelineAnalyzer,
+};
 use crate::git::Analyzer;
 use crate::models::{ContributorStats, RepositorySummary, TimelineEntry};
 use crate::utils::Result;
@@ -93,6 +98,10 @@ impl GitRepository {
 
     pub fn health_score(&self) -> Result<HealthScore> {
         HealthAnalyzer.analyze(self)
+    }
+
+    pub fn risk_report(&self) -> Result<RiskReport> {
+        RiskAnalyzer.analyze(self)
     }
 
     pub fn summary(&self) -> Result<RepositorySummary> {

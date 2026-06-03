@@ -1,3 +1,5 @@
+//! 时间线页面测试：验证提交行文本和原始顺序保留。
+
 use chrono::DateTime;
 use gitinsight_rs::models::TimelineEntry;
 use gitinsight_rs::ui::timeline::{timeline_row, timeline_rows};

@@ -1,3 +1,5 @@
+//! 贡献者页面：把贡献者统计数据格式化为终端可读列表。
+
 use ratatui::prelude::Line;
 
 use crate::models::ContributorStats;
@@ -8,8 +10,8 @@ pub fn contributor_rows(contributors: &[ContributorStats]) -> Vec<String> {
 
 pub fn contributor_row(stats: &ContributorStats) -> String {
     format!(
-        "{:<20} {:>6} commits {:>4} active days",
-        stats.name, stats.commit_count, stats.active_days
+        "{:<18} {:>5} 次提交 {:>4} 个活跃日  Ownership {:>5.1}%",
+        stats.name, stats.commit_count, stats.active_days, stats.ownership_percent
     )
 }
 
@@ -26,7 +28,7 @@ pub fn contributor_lines(
 
 fn visible_rows(rows: &[String], selected_row: usize, height: usize) -> Vec<String> {
     if rows.is_empty() {
-        return vec!["No contributors found".to_owned()];
+        return vec!["暂无贡献者数据".to_owned()];
     }
 
     let start = selected_row.min(rows.len().saturating_sub(1));
