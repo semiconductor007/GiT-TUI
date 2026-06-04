@@ -325,7 +325,6 @@ pub type Result<T> = std::result::Result<T, AppError>;
 
 ## 开发注意事项
 
-- 按功能阶段逐步开发。
+- 项目需要按功能阶段逐步开发。
 - 每个阶段完成前运行 `cargo fmt --check`、
   `cargo clippy --all-targets -- -D warnings` 和 `cargo test`。
-- 不要替用户将本项目上传到 GitHub 或任何远端仓库。
