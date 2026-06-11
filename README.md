@@ -1,8 +1,8 @@
 <!-- 项目说明：介绍 GitInsight-RS 的功能、架构、运行方式和测试方法。 -->
 
-# GitInsight-RS
+# Git-TUI
 
-GitInsight-RS 是一个基于 Rust 的 TUI 终端应用，用于读取和分析本地 Git
+Git-TUI 是一个基于 Rust 的 TUI 终端应用，用于读取和分析本地 Git
 仓库。项目通过 `git2` 读取提交历史，计算仓库指标，并使用 `ratatui` 与
 `crossterm` 在终端中展示交互式分析面板。
 
