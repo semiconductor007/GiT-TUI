@@ -307,8 +307,7 @@ pub type Result<T> = std::result::Result<T, AppError>;
 - Trait
   - `Analyzer` 为所有分析模块提供统一接口。
 - Struct
-  - 使用 `RepositorySummary`、`ContributorStats`、`TimelineEntry`、
-    `FileHotspot`、`BusFactorReport`、`HealthScore` 等领域模型。
+  - 使用 `RepositorySummary`、`ContributorStats`、`TimelineEntry`、`FileHotspot`、`BusFactorReport`、`HealthScore` 等领域模型。
 - Enum
   - 使用 `AppError`、`Tab`、`ContributorSortMode`、`RiskLevel` 等枚举。
 - 泛型与关联类型
