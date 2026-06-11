@@ -322,9 +322,3 @@ pub type Result<T> = std::result::Result<T, AppError>;
   - `AnalysisManager` 在线程任务中重新打开仓库，利用 Rust 数据安全与 Rayon 实现并行分析。
 - 测试
   - 单元测试和集成测试覆盖核心分析逻辑与 UI 辅助函数。
-
-## 开发注意事项
-
-- 项目需要按功能阶段逐步开发。
-- 每个阶段完成前运行 `cargo fmt --check`、
-  `cargo clippy --all-targets -- -D warnings` 和 `cargo test`。
